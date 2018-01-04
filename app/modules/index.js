@@ -1,5 +1,6 @@
 // @flow
 import { combineReducers } from 'redux'
+import api from './api'
 import account from './account'
 import generateWallet from './generateWallet'
 import transactions from './transactions'
@@ -13,6 +14,7 @@ import price from './price'
 import addressBook from './addressBook'
 
 export default combineReducers({
+  api,
   account,
   generateWallet,
   wallet,
