@@ -22,9 +22,7 @@ type Props = {
   currencyCode: string,
   logout: Function,
   isLoggedIn: boolean,
-  net: NetworkType,
-  loadWalletData: Function,
-  setNetwork: Function
+  net: NetworkType
 }
 
 const Header = ({
@@ -34,29 +32,23 @@ const Header = ({
   gasPrice,
   currencyCode,
   isLoggedIn,
-  net,
-  setNetwork,
-  loadWalletData
+  net
 }: Props) => (
   <div className={styles.container}>
     <Logo />
-    {isLoggedIn &&
-    <div className={styles.navBar}>
-      <PriceDisplay
-        neoPrice={neoPrice}
-        gasPrice={gasPrice}
-        currencyCode={currencyCode}
-      />
-      <WalletBlockHeight blockHeight={blockHeight} />
-      <WalletVersion version={version} />
-      <NetworkSwitch
-        net={net}
-        setNetwork={setNetwork}
-        loadWalletData={loadWalletData}
-      />
-      <Logout onClick={logout} />
-    </div>
-    }
+    {isLoggedIn && (
+      <div className={styles.navBar}>
+        <PriceDisplay
+          neoPrice={neoPrice}
+          gasPrice={gasPrice}
+          currencyCode={currencyCode}
+        />
+        <WalletBlockHeight blockHeight={blockHeight} />
+        <WalletVersion version={version} />
+        <NetworkSwitch net={net} />
+        <Logout onClick={logout} />
+      </div>
+    )}
   </div>
 )
 
