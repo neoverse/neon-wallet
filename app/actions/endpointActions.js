@@ -7,6 +7,8 @@ type Props = {
   net: string
 }
 
-export default createApiActions('ENDPOINT', ({ net }: Props = {}) => (state: Object) => {
+export const ENDPOINT_ACTIONS_ID = 'ENDPOINT'
+
+export default createApiActions(ENDPOINT_ACTIONS_ID, ({ net }: Props = {}) => (state: Object) => {
   return api.neonDB.getAPIEndpoint(net)
 })
