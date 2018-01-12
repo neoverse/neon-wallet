@@ -1,6 +1,4 @@
 // @flow
-import { get } from 'lodash'
-
 import {
   ACTION_REQUEST,
   ACTION_SUCCESS,
@@ -10,7 +8,7 @@ import {
   type Data,
   type Error,
   type ActionState
-} from '../values/api'
+} from '../../values/api'
 
 import {
   INITIAL,
@@ -18,9 +16,10 @@ import {
   LOADED,
   FAILED,
   type ProgressState
-} from '../values/state'
+} from '../../values/state'
 
 type State = {
+  batch: false,
   state: ProgressState,
   rollbackState: ProgressState | null,
   data: Data,
@@ -28,6 +27,7 @@ type State = {
 }
 
 const initialState: State = {
+  batch: false,
   state: INITIAL,
   rollbackState: null,
   data: null,
@@ -35,9 +35,7 @@ const initialState: State = {
 }
 
 function reduceRequest (state: State = initialState, actionState: ActionState): Object {
-  const requestType = get(actionState, 'meta.type')
-
-  switch (requestType) {
+  switch (actionState.meta.type) {
     case ACTION_REQUEST:
       return { ...state, state: LOADING, rollbackState: state.state }
     case ACTION_SUCCESS:
@@ -53,14 +51,13 @@ function reduceRequest (state: State = initialState, actionState: ActionState): 
   }
 }
 
-export default function apiReducer (state: Object = {}, actionState: ActionState): Object {
-  const requestId = get(actionState, 'meta.id')
-  const requestType = get(actionState, 'meta.type')
+export default function requestReducer (state: Object = {}, actionState: ActionState): Object {
+  const { id, type } = actionState.meta
 
-  if (requestType) {
+  if (type) {
     return {
       ...state,
-      [requestId]: reduceRequest(state[requestId], actionState)
+      [id]: reduceRequest(state[id], actionState)
     }
   } else {
     return state

@@ -1,17 +1,32 @@
 // @flow
-import { get } from 'lodash'
+import { get, mapValues } from 'lodash'
 import { connect, type MapStateToProps } from 'react-redux'
 import { compose, setDisplayName, wrapDisplayName } from 'recompose'
 
 import withoutProps from '../withoutProps'
-import { ACTION_PROP, type Data, type Actions } from '../../values/api'
+import { ACTION_PROP, type Data, type Actions, type ActionStateMap } from '../../values/api'
 
-const defaultMapDataToProps = (data: Data) => data
+const mapRequestDataToProps: Function = (data: Data): any => data
 
-export default function withData (actions: Actions, mapDataToProps: Function = defaultMapDataToProps): Class<React.Component<*>> {
+const mapBatchDataToProps: Function = (state: Object, id: string, mapping: ActionStateMap, prefix: string): Object => {
+  return mapValues(mapping, (key) => mapDataToProps(state, key, prefix))
+}
+
+const mapDataToProps: Function = (state: Object, id: string, prefix: string): Object => {
+  const actionState = get(state, `${prefix}.${id}`)
+
+  if (actionState.batch) {
+    return mapBatchDataToProps(state, id, actionState.mapping, prefix)
+  } else {
+    return mapRequestDataToProps(actionState.data)
+  }
+}
+
+const defaultMapper = mapRequestDataToProps
+
+export default function withData (actions: Actions, mapper: Function = defaultMapper, prefix: string = 'api'): Class<React.Component<*>> {
   const mapStateToProps: MapStateToProps<*, *, *> = (state: Object): Object => {
-    const data = get(state, `api.${actions.id}.data`)
-    return mapDataToProps(data)
+    return mapper(mapDataToProps(state, actions.id, prefix))
   }
 
   return (Component: Class<React.Component<*>>) => {

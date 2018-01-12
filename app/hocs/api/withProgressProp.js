@@ -3,8 +3,10 @@ import { get } from 'lodash'
 import { connect, type MapStateToProps } from 'react-redux'
 import { compose, setDisplayName, wrapDisplayName } from 'recompose'
 
-import { PROGRESS_PROP, type Actions } from '../../values/api'
+import { type Actions } from '../../values/api'
 import { INITIAL, type ProgressState } from '../../values/state'
+
+const PROGRESS_PROP: string = '__progress__'
 
 export default function withProgressProp (actions: Actions, propName: string = PROGRESS_PROP) {
   const mapProgressToProps = (progressState: ProgressState) => ({ [propName]: progressState })

@@ -11,9 +11,9 @@ import {
   ACTION_RESET,
   ACTION_CANCEL,
   type Error,
+  type Payload,
   type ActionMeta,
-  type ActionState,
-  type RequestPayload
+  type ActionState
 } from '../values/api'
 
 type SagaActions = {
@@ -23,7 +23,7 @@ type SagaActions = {
 }
 
 function createSagaActions (meta: ActionMeta): SagaActions {
-  function * request (state: Object, payload: RequestPayload, actions: SagaActions) {
+  function * request (state: Object, payload: Payload, actions: SagaActions) {
     const { fn } = payload
 
     try {
@@ -36,6 +36,7 @@ function createSagaActions (meta: ActionMeta): SagaActions {
 
   function success (result: any): ActionState {
     return {
+      batch: false,
       type: `${meta.id}/${ACTION_SUCCESS}`,
       meta: { ...meta, type: ACTION_SUCCESS },
       payload: result
@@ -44,6 +45,7 @@ function createSagaActions (meta: ActionMeta): SagaActions {
 
   function failure (error: Error): ActionState {
     return {
+      batch: false,
       type: `${meta.id}/${ACTION_FAILURE}`,
       meta: { ...meta, type: ACTION_FAILURE },
       payload: error
@@ -59,7 +61,7 @@ function retryAction (id: string): Function {
   }
 }
 
-export default function * saga (state: Object, actionState: ActionState): Saga<boolean> {
+export default function * requestSaga (state: Object, actionState: ActionState): Saga<boolean> {
   const id = get(actionState, 'meta.id')
   const sagaActions = createSagaActions(actionState.meta)
 

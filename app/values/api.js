@@ -1,18 +1,28 @@
 // @flow
 export type ActionProp = '__performAction__'
-export type ProgressProp = '__progress__'
-
 export const ACTION_PROP: ActionProp = '__performAction__'
-export const PROGRESS_PROP: ProgressProp = '__progress__'
 
-export type ActionType = 'API/REQUEST' | 'API/RETRY' | 'API/CANCEL' | 'API/SUCCESS' | 'API/FAILURE' | 'API/RESET'
+type RequestType = 'REQ/REQUEST' | 'REQ/RETRY' | 'REQ/CANCEL' | 'REQ/SUCCESS' | 'REQ/FAILURE' | 'REQ/RESET'
+type BatchType = 'BATCH/REQUEST' | 'BATCH/RETRY' | 'BATCH/CANCEL' | 'BATCH/SUCCESS' | 'BATCH/FAILURE' | 'BATCH/RESET'
+export type ActionType = RequestType | BatchType
 
-export const ACTION_REQUEST: ActionType = 'API/REQUEST'
-export const ACTION_RETRY: ActionType = 'API/RETRY'
-export const ACTION_CANCEL: ActionType = 'API/CANCEL'
-export const ACTION_SUCCESS: ActionType = 'API/SUCCESS'
-export const ACTION_FAILURE: ActionType = 'API/FAILURE'
-export const ACTION_RESET: ActionType = 'API/RESET'
+export const ACTION_REQUEST: RequestType = 'REQ/REQUEST'
+export const ACTION_RETRY: RequestType = 'REQ/RETRY'
+export const ACTION_CANCEL: RequestType = 'REQ/CANCEL'
+export const ACTION_SUCCESS: RequestType = 'REQ/SUCCESS'
+export const ACTION_FAILURE: RequestType = 'REQ/FAILURE'
+export const ACTION_RESET: RequestType = 'REQ/RESET'
+
+export const BATCH_REQUEST: BatchType = 'BATCH/REQUEST'
+export const BATCH_RETRY: BatchType = 'BATCH/RETRY'
+export const BATCH_CANCEL: BatchType = 'BATCH/CANCEL'
+export const BATCH_SUCCESS: BatchType = 'BATCH/SUCCESS'
+export const BATCH_FAILURE: BatchType = 'BATCH/FAILURE'
+export const BATCH_RESET: BatchType = 'BATCH/RESET'
+
+export type Data = Object | null
+export type Error = string | null
+export type Payload = any
 
 export type ActionTypeMap = {
   REQUEST: string,
@@ -37,15 +47,16 @@ export type ActionMeta = {
   type: ActionType
 }
 
-export type RequestPayload = {
-  fn: Function
+export type RequestMapping = {
+  [key: string]: ActionState // eslint-disable-line no-use-before-define
 }
 
 export type ActionState = {
   type: string,
   meta: ActionMeta,
-  payload: RequestPayload | any
+  payload?: Payload
 }
 
-export type Data = Object | null
-export type Error = string | null
+export type ActionStateMap = {
+  [key: string]: ActionState
+}
