@@ -1,96 +1,28 @@
 // @flow
 import { wallet } from 'neon-js'
-import storage from 'electron-json-storage'
 
 import { showErrorNotification, showInfoNotification, hideNotification } from './notifications'
 
 import commNode from '../ledger/ledger-comm-node'
 import { ledgerNanoSCreateSignatureAsync } from '../ledger/ledgerNanoS'
 
+import { upgradeNEP6AddAddresses } from '../core/account'
 import { validatePassphraseLength } from '../core/wallet'
 import { BIP44_PATH, ROUTES, FINDING_LEDGER_NOTICE } from '../core/constants'
 import asyncWrap from '../core/asyncHelper'
 
 // Constants
-export const LOGIN = 'LOGIN'
 export const LOGOUT = 'LOGOUT'
-export const SET_ACCOUNTS = 'SET_ACCOUNTS'
 export const HARDWARE_DEVICE_INFO = 'HARDWARE_DEVICE_INFO'
 export const HARDWARE_PUBLIC_KEY_INFO = 'HARDWARE_PUBLIC_KEY_INFO'
 export const HARDWARE_PUBLIC_KEY = 'HARDWARE_PUBLIC_KEY'
 export const HARDWARE_LOGIN = 'HARDWARE_LOGIN'
 
 // Actions
-export function login (wif: string) {
-  return {
-    type: LOGIN,
-    payload: { wif }
-  }
-}
-
-export function ledgerNanoSGetLogin () {
-  return {
-    type: LOGIN,
-    payload: { signingFunction: ledgerNanoSCreateSignatureAsync }
-  }
-}
-
 export function logout () {
   return {
     type: LOGOUT
   }
-}
-
-export function setAccounts (accounts: any) {
-  return {
-    type: SET_ACCOUNTS,
-    payload: { accounts }
-  }
-}
-
-export function upgradeNEP6AddAddresses (encryptedWIF: string, wif: string) {
-  // eslint-disable-next-line
-  storage.get('userWallet', (error, data) => {
-    const loggedIntoAccount = new wallet.Account(wif)
-
-    if (data && data.accounts) {
-      data.accounts.map((account, idx) => {
-        if (account.key === encryptedWIF) {
-          data.accounts[idx].address = loggedIntoAccount.address
-        }
-      })
-
-      storage.set('userWallet', data)
-    }
-  })
-}
-
-export const loginNep2 = (passphrase: string, encryptedWIF: string, history: Object) => (dispatch: DispatchType) => {
-  const dispatchError = (message: string) => dispatch(showErrorNotification({ message }))
-
-  if (!validatePassphraseLength(passphrase)) {
-    return dispatchError('Passphrase too short')
-  }
-
-  if (!wallet.isNEP2(encryptedWIF)) {
-    return dispatchError('That is not a valid encrypted key')
-  }
-
-  const infoNotificationId: any = dispatch(showInfoNotification({ message: 'Decrypting encoded key...' }))
-
-  setTimeout(() => {
-    try {
-      const wif = wallet.decrypt(encryptedWIF, passphrase)
-
-      upgradeNEP6AddAddresses(encryptedWIF, wif)
-
-      dispatch(hideNotification(infoNotificationId))
-      dispatch(login(wif))
-      return history.push(ROUTES.DASHBOARD)
-    } catch (e) {
-      return dispatchError('Wrong passphrase or invalid encrypted key')
-    }
-  }, 500)
 }
 
 export function hardwareDeviceInfo (hardwareDeviceInfo: string) {
@@ -118,15 +50,6 @@ export function isHardwareLogin (isHardwareLogin: boolean) {
   return {
     type: HARDWARE_LOGIN,
     payload: { isHardwareLogin }
-  }
-}
-
-export const loginWithPrivateKey = (wif: string, history: Object, route?: RouteType) => (dispatch: DispatchType) => {
-  if (wallet.isWIF(wif)) {
-    dispatch(login(wif))
-    return history.push(route || ROUTES.DASHBOARD)
-  } else {
-    return dispatch(showErrorNotification({ message: 'That is not a valid private key' }))
   }
 }
 
@@ -215,34 +138,6 @@ const initialState = {
 
 export default (state: Object = initialState, action: ReduxAction) => {
   switch (action.type) {
-    case LOGIN:
-      const { signingFunction, wif } = action.payload
-      let loadAccount: Object | number
-      try {
-        if (signingFunction) {
-          const publicKeyEncoded = wallet.getPublicKeyEncoded(state.publicKey)
-          loadAccount = new wallet.Account(publicKeyEncoded)
-        } else {
-          loadAccount = new wallet.Account(wif)
-        }
-      } catch (e) {
-        console.log(e.stack)
-        loadAccount = -1
-      }
-      if (typeof loadAccount !== 'object') {
-        return {
-          ...state,
-          wif,
-          loggedIn: false
-        }
-      }
-      return {
-        ...state,
-        wif,
-        address: loadAccount.address,
-        loggedIn: true,
-        signingFunction
-      }
     case LOGOUT:
       return {
         ...state,
@@ -252,12 +147,6 @@ export default (state: Object = initialState, action: ReduxAction) => {
         signingFunction: null,
         publicKey: null,
         isHardwareLogin: false
-      }
-    case SET_ACCOUNTS:
-      const { accounts } = action.payload
-      return {
-        ...state,
-        accounts
       }
     case HARDWARE_DEVICE_INFO:
       const { hardwareDeviceInfo } = action.payload
