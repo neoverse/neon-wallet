@@ -14,17 +14,11 @@ import {
   getGAS
 } from '../core/deprecated'
 import { toNumber } from '../core/math'
-import asyncWrap from '../core/asyncHelper'
 import { ASSETS } from '../core/constants'
-import {
-  validateMintTokensInputs,
-  validateOldMintTokensInputs
-} from '../core/sale'
+import { validateMintTokensInputs, validateOldMintTokensInputs } from '../core/sale'
 import { oldMintTokens } from '../core/oldMintTokens'
 
-const MESSAGES = {
-  PARTICIPATION_FAILED: 'Sale participation failed, please check your script hash again.'
-}
+const ERROR_PREFIX = 'Sale participation failed'
 
 export const participateInSale = (
   neoToSend: string,
@@ -59,10 +53,9 @@ export const participateInSale = (
     return false
   }
 
-  const _scriptHash =
-    scriptHash.length === 40
-      ? scriptHash
-      : scriptHash.slice(2, scriptHash.length)
+  const formattedScriptHash = scriptHash.length === 40
+    ? scriptHash
+    : scriptHash.slice(2, scriptHash.length)
 
   let notificationId
 
@@ -79,7 +72,7 @@ export const participateInSale = (
     )
   }
 
-  const scriptHashAddress = wallet.getAddressFromScriptHash(_scriptHash)
+  const scriptHashAddress = wallet.getAddressFromScriptHash(formattedScriptHash)
 
   const intents = [[ASSETS.NEO, neoToMint], [ASSETS.GAS, gasToMint]]
     .filter(([symbol, amount]) => amount > 0)
@@ -88,7 +81,7 @@ export const participateInSale = (
     )
 
   const script = {
-    scriptHash: _scriptHash,
+    scriptHash: formattedScriptHash,
     operation: 'mintTokens',
     args: []
   }
@@ -103,15 +96,17 @@ export const participateInSale = (
     signingFunction: isHardwareLogin ? signingFunction : null
   }
 
-  const [error, response] = await asyncWrap(api.doInvoke(config))
-  if (error || !response || !response.response || !response.response.result) {
-    dispatch(
-      showErrorNotification({
-        message: MESSAGES.PARTICIPATION_FAILED
-      })
-    )
+  try {
+    const response = await api.doInvoke(config)
+
+    if (!response || !response.response || !response.response.result) {
+      throw new Error('Rejected by RPC server.')
+    }
+  } catch (err) {
+    dispatch(showErrorNotification({ message: `${ERROR_PREFIX}: ${err.message}` }))
     return false
   }
+
   // $FlowFixMe
   dispatch(hideNotification(notificationId))
   return true
@@ -144,7 +139,7 @@ export const oldParticipateInSale = (
     return false
   }
 
-  const _scriptHash =
+  const formattedScriptHash =
     scriptHash.length === 40
       ? scriptHash
       : scriptHash.slice(2, scriptHash.length)
@@ -165,24 +160,25 @@ export const oldParticipateInSale = (
   }
 
   const wifOrPublicKey = isHardwareLogin ? publicKey : wif
-  const [error, response] = await asyncWrap(
-    oldMintTokens(
+
+  try {
+    const response = await oldMintTokens(
       net,
-      _scriptHash,
+      formattedScriptHash,
       wifOrPublicKey,
       neoToMint,
       0,
       signingFunction
     )
-  )
-  if (error || !response || !response.result) {
-    dispatch(
-      showErrorNotification({
-        message: MESSAGES.PARTICIPATION_FAILED
-      })
-    )
+
+    if (!response || !response.result) {
+      throw new Error('Rejected by RPC server.')
+    }
+  } catch (err) {
+    dispatch(showErrorNotification({ message: `${ERROR_PREFIX}: ${err.message}` }))
     return false
   }
+
   // $FlowFixMe
   dispatch(hideNotification(notificationId))
   return true

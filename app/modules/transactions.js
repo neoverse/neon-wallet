@@ -126,8 +126,7 @@ export const sendTransaction = (sendEntries: Array<SendEntryType>) => async (
   const publicKey = getPublicKey(state)
   const isHardwareSend = getIsHardwareLogin(state)
 
-  const rejectTransaction = (message: string) =>
-    dispatch(showErrorNotification({ message }))
+  const rejectTransaction = (message: string) => dispatch(showErrorNotification({ message }))
 
   const error = validateTransactionsBeforeSending(balances, sendEntries)
 
@@ -152,12 +151,10 @@ export const sendTransaction = (sendEntries: Array<SendEntryType>) => async (
   )
 
   if (isHardwareSend) {
-    dispatch(
-      showInfoNotification({
-        message: 'Please sign the transaction on your hardware device',
-        autoDismiss: 0
-      })
-    )
+    dispatch(showInfoNotification({
+      message: 'Please sign the transaction on your hardware device',
+      autoDismiss: 0
+    }))
   }
 
   try {
@@ -171,13 +168,13 @@ export const sendTransaction = (sendEntries: Array<SendEntryType>) => async (
     })
 
     if (!response.result) {
-      throw new Error('Transaction failed')
+      throw new Error('Rejected by RPC server.')
     }
-
-    return dispatch(showSuccessNotification({
-      message: 'Transaction complete! Your balance will automatically update when the blockchain has processed it.'
-    }))
   } catch (err) {
-    return rejectTransaction('Transaction failed!')
+    return rejectTransaction(`Transaction failed: ${err.message}`)
   }
+
+  return dispatch(showSuccessNotification({
+    message: 'Transaction complete! Your balance will automatically update when the blockchain has processed it.'
+  }))
 }
